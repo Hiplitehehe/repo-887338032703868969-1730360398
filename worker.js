@@ -7,7 +7,7 @@ async function handleRequest(request) {
 
   // Set headers for CORS
   const headers = {
-    'Access-Control-Allow-Origin': '*',  // Allow all origins
+    'Access-Control-Allow-Origin': '*',  
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type',
   }
@@ -46,15 +46,11 @@ async function handleRequest(request) {
     }
   }
 
-  // Return 404 for any other routes
   return new Response("Not Found", { status: 404, headers })
 }
 
 function generateRandomKey() {
-  // Improved randomness
-  const array = new Uint8Array(16); // 16 bytes
-  crypto.getRandomValues(array);
-  return Array.from(array).map(byte => byte.toString(16).padStart(2, '0')).join('');
+  return Math.random().toString(36).substring(2, 15); // simple random key generation
 }
 
 async function storeKey(key) {
@@ -63,7 +59,7 @@ async function storeKey(key) {
     return { success: result === undefined }
   } catch (error) {
     console.error(error)
-    return { success: false, errorMessage: error.message } // Capture error message
+    return { success: false, errorMessage: error.message } 
   }
 }
 
@@ -78,6 +74,6 @@ async function bindKeyToUser(userId, apiKey) {
     return { success: true }
   } catch (error) {
     console.error(error)
-    return { success: false, errorMessage: error.message } // Capture error message
+    return { success: false, errorMessage: error.message }
   }
-      }
+}
