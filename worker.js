@@ -51,7 +51,10 @@ async function handleRequest(request) {
 }
 
 function generateRandomKey() {
-  return Math.random().toString(36).substring(2, 15); // simple random key generation
+  // Improved randomness
+  const array = new Uint8Array(16); // 16 bytes
+  crypto.getRandomValues(array);
+  return Array.from(array).map(byte => byte.toString(16).padStart(2, '0')).join('');
 }
 
 async function storeKey(key) {
@@ -77,4 +80,4 @@ async function bindKeyToUser(userId, apiKey) {
     console.error(error)
     return { success: false, errorMessage: error.message } // Capture error message
   }
-}
+      }
