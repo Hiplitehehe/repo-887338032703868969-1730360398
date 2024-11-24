@@ -7,7 +7,7 @@ async function handleRequest(request) {
 
   // Set headers for CORS
   const headers = {
-    'Access-Control-Allow-Origin': '*',  // Allow all origins, adjust as needed
+    'Access-Control-Allow-Origin': '*',  // Allow all origins
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type',
   }
@@ -17,49 +17,64 @@ async function handleRequest(request) {
     return new Response(null, { status: 204, headers })
   }
 
-  // Handle the /bind request to bind an API key to a user
-  if (url.pathname === "/bind") {
-    const userId = url.searchParams.get("userId")
-    const apiKeyParam = url.searchParams.get("apiKey")
+  // Generate new key (without needing userId)
+  if (url.pathname === "/genKey") {
+    const key = generateRandomKey()
+    const keyStoreResult = await storeKey(key)
 
-    if (!userId || !apiKeyParam) {
-      return new Response(JSON.stringify({ success: false, message: "Error: Missing userId or apiKey" }), { status: 400, headers })
-    }
-
-    try {
-      // Ensure that apiKeyParam is a string before storing it in KV store
-      await API_KEYS.put(userId, String(apiKeyParam))  // Convert to string
-
-      return new Response(JSON.stringify({ success: true, message: "API Key bound successfully!" }), { status: 200, headers })
-
-    } catch (error) {
-      return new Response(JSON.stringify({ success: false, message: `Error reason: ${error.message}` }), { status: 500, headers })
+    if (keyStoreResult.success) {
+      return new Response(JSON.stringify({ success: true, apiKey: key }), { status: 200, headers })
+    } else {
+      return new Response(JSON.stringify({ success: false, message: `KV error because: ${keyStoreResult.errorMessage}` }), { status: 500, headers })
     }
   }
 
-  // Handle the /getKey request to retrieve the API key for a user
-  else if (url.pathname === "/getKey") {
+  // Bind an API key to a userId
+  else if (url.pathname === "/bind") {
     const userId = url.searchParams.get("userId")
+    const apiKey = url.searchParams.get("apiKey")
 
-    if (!userId) {
-      return new Response(JSON.stringify({ success: false, message: "Error: Missing userId" }), { status: 400, headers })
+    if (!userId || !apiKey) {
+      return new Response(JSON.stringify({ success: false, message: "userId or apiKey is missing" }), { status: 400, headers })
     }
 
-    try {
-      // Retrieve the API key from KV store
-      const apiKey = await API_KEYS.get(userId)
-
-      if (apiKey) {
-        return new Response(JSON.stringify({ apiKey: apiKey }), { status: 200, headers })
-      } else {
-        return new Response(JSON.stringify({ success: false, message: "Error reason: API Key not found or not bound" }), { status: 404, headers })
-      }
-
-    } catch (error) {
-      return new Response(JSON.stringify({ success: false, message: `Error reason: ${error.message}` }), { status: 500, headers })
+    const bindResult = await bindKeyToUser(userId, apiKey)
+    if (bindResult.success) {
+      return new Response(JSON.stringify({ success: true, message: "API key bound successfully" }), { status: 200, headers })
+    } else {
+      return new Response(JSON.stringify({ success: false, message: `KV error because: ${bindResult.errorMessage}` }), { status: 400, headers })
     }
   }
 
   // Return 404 for any other routes
   return new Response("Not Found", { status: 404, headers })
+}
+
+function generateRandomKey() {
+  return Math.random().toString(36).substring(2, 15); // simple random key generation
+}
+
+async function storeKey(key) {
+  try {
+    const result = await KEYS_NAMESPACE.put("key-" + key, key) // Store the key in KV
+    return { success: result === undefined }
+  } catch (error) {
+    console.error(error)
+    return { success: false, errorMessage: error.message } // Capture error message
+  }
+}
+
+async function bindKeyToUser(userId, apiKey) {
+  try {
+    const existingKey = await KEYS_NAMESPACE.get(userId)
+    if (existingKey) {
+      return { success: false, errorMessage: "API key already bound to this user" }
+    }
+
+    await KEYS_NAMESPACE.put(userId, apiKey)
+    return { success: true }
+  } catch (error) {
+    console.error(error)
+    return { success: false, errorMessage: error.message } // Capture error message
+  }
 }
