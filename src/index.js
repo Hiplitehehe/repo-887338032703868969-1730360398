@@ -46,6 +46,23 @@ async function handleRequest(request) {
     }
   }
 
+  // Validate API key usage by userId
+  else if (url.pathname === "/useKey") {
+    const userId = url.searchParams.get("userId")
+    const apiKey = url.searchParams.get("apiKey")
+
+    if (!userId || !apiKey) {
+      return new Response(JSON.stringify({ success: false, message: "userId or apiKey is missing" }), { status: 400, headers })
+    }
+
+    const validationResult = await validateKeyForUser(userId, apiKey)
+    if (validationResult.success) {
+      return new Response(JSON.stringify({ success: true, message: "API key validated successfully" }), { status: 200, headers })
+    } else {
+      return new Response(JSON.stringify({ success: false, message: `Error: ${validationResult.errorMessage}` }), { status: 403, headers })
+    }
+  }
+
   // Return 404 for any other routes
   return new Response("Not Found", { status: 404, headers })
 }
@@ -77,4 +94,24 @@ async function bindKeyToUser(userId, apiKey) {
     console.error(error)
     return { success: false, errorMessage: `KV error because: ${error.message}` }
   }
+}
+
+// Function to validate the API key for a given user
+async function validateKeyForUser(userId, apiKey) {
+  try {
+    const boundKey = await KEYS_NAMESPACE.get(userId)
+
+    if (!boundKey) {
+      return { success: false, errorMessage: "User does not have a bound API key" }
+    }
+
+    if (boundKey !== apiKey) {
+      return { success: false, errorMessage: "API key does not match the bound key for this user" }
+    }
+
+    return { success: true }
+  } catch (error) {
+    console.error(error)
+    return { success: false, errorMessage: `KV error because: ${error.message}` }
   }
+    }
