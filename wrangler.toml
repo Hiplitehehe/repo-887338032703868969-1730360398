@@ -1,4 +1,4 @@
-name = "cvc"  # Specify the name of your worker
+name = "j"  # Specify the name of your worker
 type = "javascript"        # Specify the worker type (e.g., "javascript", "webpack", "rust")
 
 main = "src/index.js"      # Specify the entry point script for your worker
