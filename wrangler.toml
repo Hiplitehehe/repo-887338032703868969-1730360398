@@ -1,1 +1,12 @@
+name = "your-worker-name"  # Specify the name of your worker
+type = "javascript"        # Specify the worker type (e.g., "javascript", "webpack", "rust")
 
+main = "src/index.js"      # Specify the entry point script for your worker
+
+account_id = "your-cloudflare-account-id"  # Your Cloudflare account ID
+workers_dev = true         # Set to true if using Cloudflare Workers Dev mode
+compatibility_date = "2024-11-24"  # Specify the compatibility date for the worker
+
+# Optional: Configuring logging
+[observability.logs]
+enabled = true  # Enable log observability
