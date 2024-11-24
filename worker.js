@@ -17,59 +17,59 @@ async function handleRequest(request) {
     return new Response(null, { status: 204, headers })
   }
 
-  // Handle /genKey request to generate API key
-  if (url.pathname === '/genKey') {
-    const generatedKey = generateAPIKey()
+  // MongoDB setup (assuming you have a MongoDB Atlas instance or a key-value store)
+  const KEYS_NAMESPACE = KV_NAMESPACE; // Replace with your actual KV namespace
 
-    // Store the generated key in KV storage
-    const kvKey = `apiKey_${generatedKey}` // Store by key name for uniqueness
-    await API_KEYS.put(kvKey, generatedKey)
+  // Handle the /genKey request to generate an API key
+  if (url.pathname === "/genKey") {
+    const apiKey = generateApiKey();
 
-    // Return the generated API key in the response
-    return new Response(
-      JSON.stringify({ success: true, apiKey: generatedKey }),
-      { status: 200, headers }
-    )
+    // Store the API key in KV
+    const keyId = `key_${Date.now()}`; // Unique key ID based on timestamp or UUID
+    await KEYS_NAMESPACE.put(keyId, apiKey);
+
+    return new Response(JSON.stringify({
+      success: true,
+      message: "API Key generated but hasn't been bound to a user yet.",
+      apiKey: apiKey
+    }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
+    })
   }
 
-  // Handle /bind request to associate a user with an API key
-  if (url.pathname === '/bind') {
-    const userId = url.searchParams.get('userId')
-    const apiKey = url.searchParams.get('apiKey')
+  // Handle the /bindKey request to bind the API key to a user
+  else if (url.pathname === "/bindKey") {
+    const apiKey = url.searchParams.get('apiKey');
+    const userId = url.searchParams.get('userId');
 
-    if (!userId || !apiKey) {
-      return new Response(
-        JSON.stringify({ success: false, message: "Missing userId or apiKey" }),
-        { status: 400, headers }
-      )
+    if (!apiKey || !userId) {
+      return new Response(JSON.stringify({ success: false, message: "Missing apiKey or userId" }), { status: 400, headers });
     }
 
-    // Check if the API key exists in KV
-    const kvKey = `apiKey_${apiKey}`
-    const storedKey = await API_KEYS.get(kvKey)
-
-    if (!storedKey) {
-      return new Response(
-        JSON.stringify({ success: false, message: "API key not found" }),
-        { status: 404, headers }
-      )
+    // Check if the key exists in the KV store
+    const keyData = await KEYS_NAMESPACE.get(apiKey);
+    if (!keyData) {
+      return new Response(JSON.stringify({ success: false, message: "API Key not found or invalid" }), { status: 404, headers });
     }
 
-    // Store the binding of the userId with the API key
-    const userBindingKey = `user_${userId}_key`
-    await API_KEYS.put(userBindingKey, apiKey)
+    // Bind the key to the user by storing the mapping in KV
+    const bindingId = `user_${userId}_key`; // Key format to bind a user to a key
+    await KEYS_NAMESPACE.put(bindingId, apiKey);
 
-    return new Response(
-      JSON.stringify({ success: true, message: "API key bound successfully!" }),
-      { status: 200, headers }
-    )
+    return new Response(JSON.stringify({
+      success: true,
+      message: `API Key successfully bound to user ${userId}`,
+      userId: userId,
+      apiKey: apiKey
+    }), { status: 200, headers });
   }
 
-  // Default 404 if the endpoint doesn't match
+  // Return 404 for any other routes
   return new Response("Not Found", { status: 404, headers })
 }
 
-// Function to generate a unique API key (using UUID)
-function generateAPIKey() {
-  return crypto.randomUUID() // Generate a random unique API key
+// Generate a simple API key (could be improved with a better method)
+function generateApiKey() {
+  return 'api_' + Math.random().toString(36).substring(2, 15);
 }
