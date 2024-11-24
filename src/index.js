@@ -7,7 +7,7 @@ async function handleRequest(request) {
 
   // Set headers for CORS
   const headers = {
-    'Access-Control-Allow-Origin': '*',  
+    'Access-Control-Allow-Origin': '*',  // Allow all origins
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type',
   }
@@ -46,6 +46,7 @@ async function handleRequest(request) {
     }
   }
 
+  // Return 404 for any other routes
   return new Response("Not Found", { status: 404, headers })
 }
 
@@ -59,7 +60,7 @@ async function storeKey(key) {
     return { success: result === undefined }
   } catch (error) {
     console.error(error)
-    return { success: false, errorMessage: error.message } 
+    return { success: false, errorMessage: error.message } // Capture error message
   }
 }
 
@@ -74,6 +75,6 @@ async function bindKeyToUser(userId, apiKey) {
     return { success: true }
   } catch (error) {
     console.error(error)
-    return { success: false, errorMessage: error.message }
+    return { success: false, errorMessage: `KV error because: ${error.message}` }
   }
-}
+  }
