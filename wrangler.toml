@@ -3,7 +3,7 @@ type = "javascript"        # Specify the worker type (e.g., "javascript", "webpa
 
 main = "src/index.js"      # Specify the entry point script for your worker
 
-account_id = "your-cloudflare-account-id"  # Your Cloudflare account ID
+account_id = "4806f2425c6560e67d083f843b83dd5d"  # Your Cloudflare account ID
 workers_dev = true         # Set to true if using Cloudflare Workers Dev mode
 compatibility_date = "2024-11-24"  # Specify the compatibility date for the worker
 
