@@ -88,6 +88,7 @@ async function bindKeyToUser(userId, apiKey) {
       return { success: false, errorMessage: "API key already bound to this user" }
     }
 
+    // Store the API key for the userId
     await KEYS_NAMESPACE.put(userId, apiKey)
     return { success: true }
   } catch (error) {
@@ -105,6 +106,7 @@ async function validateKeyForUser(userId, apiKey) {
       return { success: false, errorMessage: "User does not have a bound API key" }
     }
 
+    // If the key provided does not match the one bound to the userId, return an error
     if (boundKey !== apiKey) {
       return { success: false, errorMessage: "API key does not match the bound key for this user" }
     }
@@ -114,4 +116,4 @@ async function validateKeyForUser(userId, apiKey) {
     console.error(error)
     return { success: false, errorMessage: `KV error because: ${error.message}` }
   }
-    }
+        }
