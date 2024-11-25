@@ -1,5 +1,3 @@
-import { KEYS } from '@cloudflare/workers-kv';
-
 export async function handleVerifyKey(key, username) {
     const currentTime = getCurrentTime();
 
