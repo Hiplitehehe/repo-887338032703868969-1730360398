@@ -1,4 +1,4 @@
-import { KEYS } from '@cloudflare/workers-kv';
+
 
 export async function handleAddKey() {
     const key = generateKey();
