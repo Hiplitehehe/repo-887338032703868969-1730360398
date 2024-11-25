@@ -9,7 +9,7 @@ compatibility_date = "2024-11-24"  # Specify the compatibility date for the work
 
 # Bind KV namespace
 kv_namespaces = [
-  { binding = "keys", id = "74d6b52c378740db9e43d7ad6172304a" }
+  { binding = "KEYS", id = "74d6b52c378740db9e43d7ad6172304a" }
 ]
 
 # Optional: Configuring logging
