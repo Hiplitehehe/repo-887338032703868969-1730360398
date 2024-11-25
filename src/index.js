@@ -1,4 +1,24 @@
-export async function handleAddKey() {
+addEventListener('fetch', event => {
+    event.respondWith(handleRequest(event.request));
+});
+
+async function handleRequest(request) {
+    const url = new URL(request.url);
+    
+    if (url.pathname === '/api/add') {
+        return handleAddKey();
+    } else if (url.pathname === '/api/keys') {
+        return handleListKeys();
+    } else if (url.pathname === '/api/verify') {
+        const key = url.searchParams.get('key');
+        const username = url.searchParams.get('username');
+        return handleVerifyKey(key, username);
+    }
+
+    return new Response("Not Found", { status: 404 });
+}
+
+async function handleAddKey() {
     try {
         const key = generateKey();
         const expiry = getCurrentTime() + 3 * 24 * 60 * 60; // 3 days in seconds
@@ -7,17 +27,17 @@ export async function handleAddKey() {
 
         return new Response(
             JSON.stringify({ success: true, key, expiresAt: expiry }),
-            { status: 200 } // Ensure 200 OK response
+            { status: 200 }
         );
     } catch (error) {
         return new Response(
             JSON.stringify({ success: false, message: "An error occurred while adding the key.", error: error.message }),
-            { status: 200 } // Return 200 even on error, but include error details
+            { status: 200 }
         );
     }
 }
 
-export async function handleListKeys() {
+async function handleListKeys() {
     try {
         const keysList = [];
         const currentTime = getCurrentTime();
@@ -37,12 +57,12 @@ export async function handleListKeys() {
     } catch (error) {
         return new Response(
             JSON.stringify({ success: false, message: "An error occurred while listing keys.", error: error.message }),
-            { status: 200 } // Return 200 even on error
+            { status: 200 }
         );
     }
 }
 
-export async function handleVerifyKey(key, username) {
+async function handleVerifyKey(key, username) {
     try {
         const currentTime = getCurrentTime();
 
@@ -50,7 +70,7 @@ export async function handleVerifyKey(key, username) {
         if (!value) {
             return new Response(
                 JSON.stringify({ valid: false, reason: 'invalid' }),
-                { status: 200 } // Return 200 even if key is invalid
+                { status: 200 }
             );
         }
 
@@ -59,7 +79,7 @@ export async function handleVerifyKey(key, username) {
             await KEYS.delete(key); // Remove expired key
             return new Response(
                 JSON.stringify({ valid: false, reason: 'expired' }),
-                { status: 200 } // Return 200 even if key is expired
+                { status: 200 }
             );
         }
 
@@ -69,7 +89,7 @@ export async function handleVerifyKey(key, username) {
         } else if (data.username !== username) {
             return new Response(
                 JSON.stringify({ valid: false, reason: 'bound_to_other' }),
-                { status: 200 } // Return 200 even if bound to another user
+                { status: 200 }
             );
         }
 
@@ -79,12 +99,12 @@ export async function handleVerifyKey(key, username) {
                 expiresAt: data.expiry,
                 username: data.username,
             }),
-            { status: 200 } // Return 200 for valid keys
+            { status: 200 }
         );
     } catch (error) {
         return new Response(
             JSON.stringify({ valid: false, reason: 'error', message: error.message }),
-            { status: 200 } // Return 200 even on error, but include the error message
+            { status: 200 }
         );
     }
 }
@@ -95,4 +115,4 @@ function generateKey() {
 
 function getCurrentTime() {
     return Math.floor(Date.now() / 1000);
-}
+                            }
